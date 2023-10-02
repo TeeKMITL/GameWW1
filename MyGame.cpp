@@ -1,14 +1,15 @@
 #include<iostream>
 #include"SFML/Graphics.hpp"
 #include"SFML/Window.hpp"
-#include"SFML/System.hpp
+#include"SFML/System.hpp"
 
 using namespace sf;
 
-void Update(RectangleShape& square, RenderWindow& window, float& moveSpeed, float& jumpspeed, Vector2f& velocity, const float& gravity, int &jumpcount, Event &event);
-void Draw(RenderWindow &target, RectangleShape &square);
+void Update(RectangleShape& square, RenderWindow& window, float& moveSpeed, float& jumpspeed, Vector2f& velocity, const float& gravity, int& jumpcount, Event& event, CircleShape& egg1, CircleShape& egg2);
 
 int main() {
+	sf::Clock clock1;
+	sf::Clock clock2;
 
 	const float gravity = 1;
 	Vector2f velocity(Vector2f(0, 0));
@@ -17,10 +18,42 @@ int main() {
 
 	RenderWindow window(VideoMode(1920, 1080), "Test");
 	window.setFramerateLimit(60);
+
 	RectangleShape square(Vector2f(50.f, 50.0f));
 	square.setFillColor(Color::Red);
 	square.setPosition(window.getSize().x / 2, window.getSize().y / 2);
 
+	CircleShape egg1;
+	egg1.setRadius(20);
+	egg1.setFillColor(Color::Yellow);
+	egg1.setOutlineThickness(5);
+	egg1.setPosition(40, 630);
+
+	CircleShape egg2;
+	egg2.setRadius(20);
+	egg2.setFillColor(Color::Yellow);
+	egg2.setOutlineThickness(5);
+	egg2.setPosition(1830, 630);
+
+	Font font;
+	if (!font.loadFromFile("ARIAL.ttf")) {
+		return 1;
+	}
+
+
+	Texture texture;
+	if (!texture.loadFromFile("res/sword.png")) {
+		return 1;
+	}
+	std::vector<sf::Sprite> sprites;
+	std::srand(static_cast<unsigned int>(std::time(nullptr)));
+
+	for (int i = 0; i < 20; ++i) {
+		sf::Sprite sprite(texture);
+		sprite.setScale(0.1f, 0.1f);
+		sprite.setPosition(std::rand() % 1920, -50);
+		sprites.push_back(sprite);
+	}
 
 	while (window.isOpen()) {
 		Event event;
@@ -31,20 +64,39 @@ int main() {
 				window.close();
 		}
 
-		Update( square, window, moveSpeed, jumpspeed, velocity, gravity, jumpcount, event);
-		Draw(window, square);
+		FloatRect rectBounds = square.getGlobalBounds();
+		FloatRect egg1Bounds = egg1.getGlobalBounds();
+		FloatRect egg2Bounds = egg2.getGlobalBounds();
+
+
+		for (auto& sprite : sprites) {
+			sprite.move(0, 2);
+			if (sprite.getPosition().y > 600) {
+				sprite.setPosition(std::rand() % 800, -50);
+			}
+		}
+
+		Update(square, window, moveSpeed, jumpspeed, velocity, gravity, jumpcount, event, egg1, egg2);
+		window.clear(Color::White);
+		for (const auto& sprite : sprites) {
+			window.draw(sprite);
+		}
+		window.draw(square);
+		window.draw(egg1);
+		window.draw(egg2);
+		window.display();
+
 	}
 }
 
-void Update(RectangleShape &square, RenderWindow &window, float &moveSpeed, float &jumpspeed, Vector2f &velocity, const float &gravity, int &jumpcount, Event &event) {
-	
+void Update(RectangleShape& square, RenderWindow& window, float& moveSpeed, float& jumpspeed, Vector2f& velocity, const float& gravity, int& jumpcount, Event& event, CircleShape& egg1, CircleShape& egg2) {
+
 	bool paused;
 
-	
 
 	if (Keyboard::isKeyPressed(Keyboard::P)) {
 		paused = true;
-			
+
 		velocity.x = square.getPosition().x;
 		velocity.y = square.getPosition().y;
 
@@ -88,10 +140,4 @@ void Update(RectangleShape &square, RenderWindow &window, float &moveSpeed, floa
 		jumpcount = 0;
 	}
 	square.move(velocity.x, velocity.y);
-}
-
-void Draw(RenderWindow &window, RectangleShape &square) {
-	window.clear(Color::White);
-	window.draw(square);
-	window.display();
 }
